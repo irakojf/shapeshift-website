@@ -12,11 +12,11 @@ export const MASK = {
 };
 
 // Fixed playlist order — DO NOT CHANGE.
+// NOTE: baggu.mp4 temporarily removed, podcast moved to index 1
 export const PLAYLIST = [
   { type: "video", filename: "hazel.mp4", src: "assets/videos/hazel.mp4" },
-  { type: "video", filename: "baggu.mp4", src: "assets/videos/baggu.mp4" },
-  { type: "video", filename: "amera.mp4", src: "assets/videos/amera.mp4" },
   { type: "video", filename: "podcast.mp4", src: "assets/videos/podcast.mp4" },
+  { type: "video", filename: "amera.mp4", src: "assets/videos/amera.mp4" },
   { type: "image", filename: "hailey-choi.png", src: "assets/bios/hailey-choi.png" },
   { type: "image", filename: "jamie-mcneill.png", src: "assets/bios/jamie-mcneill.png" },
   { type: "image", filename: "ira-ko.png", src: "assets/bios/ira-ko.png" },
