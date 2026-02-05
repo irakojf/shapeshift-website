@@ -310,7 +310,7 @@ html, body {
   .logo-section {
     order: 1;
     flex-shrink: 0;
-    margin-bottom: 1rem;
+    margin-bottom: 8rem;
   }
 
   .logo {
@@ -321,7 +321,7 @@ html, body {
     order: 3;
     font-size: 0.85rem;
     margin: 0;
-    margin-top: 0.75rem;
+    margin-top: 5rem;
     flex-shrink: 0;
   }
 
