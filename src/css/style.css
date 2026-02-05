@@ -343,4 +343,12 @@ html, body {
     order: 4;
     flex-shrink: 0;
   }
+
+  .tv-screen {
+    --ticker-height: clamp(20px, 6%, 32px);
+  }
+
+  .ticker-track img {
+    height: 16px;
+  }
 }
