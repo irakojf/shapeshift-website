@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Shapeshift</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Sans+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="shapeshift-container">
+    <header class="logo-section">
+      <img class="logo" src="assets/images/logo.webp" alt="Shapeshift">
+    </header>
+    <p class="tagline">Videos that drive growth</p>
+    <div class="tv-container">
+      <div class="tv-screen" data-screen>
+        <div class="tv-screen-content" data-screen-content>
+        <div id="tvPlayer" class="tv-player" data-tv-player data-active-index="0" data-active-asset="hazel.mp4">
+          <!-- Channel 0: Hazel video -->
+          <div class="channel active" data-channel="0">
+            <video class="channel-video" src="assets/videos/hazel.mp4" muted loop playsinline autoplay></video>
+          </div>
+          <!-- Channel 1: Baggu video -->
+          <div class="channel" data-channel="1">
+            <video class="channel-video" src="assets/videos/baggu.mp4" muted loop playsinline></video>
+          </div>
+          <!-- Channel 2: Hightouch video -->
+          <div class="channel" data-channel="2">
+            <video class="channel-video" src="assets/videos/amera.mp4" muted loop playsinline></video>
+          </div>
+          <!-- Channel 3: Podcast video -->
+          <div class="channel" data-channel="3">
+            <video class="channel-video" src="assets/videos/podcast.mp4" muted loop playsinline></video>
+          </div>
+          <!-- Channel 4: Hailey bio -->
+          <div class="channel" data-channel="4" data-bio="hailey-choi.png">
+            <img class="channel-bio" src="assets/bios/hailey-choi.png" alt="Hailey Choi">
+          </div>
+          <!-- Channel 5: Jamie bio -->
+          <div class="channel" data-channel="5" data-bio="jamie-mcneill.png">
+            <img class="channel-bio" src="assets/bios/jamie-mcneill.png" alt="Jamie McNeill">
+          </div>
+          <!-- Channel 6: Ira bio -->
+          <div class="channel" data-channel="6" data-bio="ira-ko.png">
+            <img class="channel-bio" src="assets/bios/ira-ko.png" alt="Ira Ko">
+          </div>
+          </div>
+          <div class="hotspot-layer" data-hotspots aria-hidden="true"></div>
+        </div>
+        <div class="tv-ticker" data-ticker data-loop-seconds="24" data-logo-set="full">
+          <div class="ticker-track" aria-hidden="true">
+            <img src="assets/logos/PAVE_WHITE.png" alt="" class="ticker-logo">
+            <img src="assets/logos/HIGHTOUCH_WHITE.png" alt="" class="ticker-logo">
+            <img src="assets/logos/HAZEL_WHITE.png" alt="" class="ticker-logo">
+            <img src="assets/logos/AMERA_WHITE.png" alt="" class="ticker-logo">
+            <img src="assets/logos/SPEAKEASY_WHITE.png" alt="" class="ticker-logo">
+            <img src="assets/logos/PORTABLE_WHITE.png" alt="" class="ticker-logo">
+            <!-- Duplicate set for seamless loop -->
+            <img src="assets/logos/PAVE_WHITE.png" alt="" class="ticker-logo">
+            <img src="assets/logos/HIGHTOUCH_WHITE.png" alt="" class="ticker-logo">
+            <img src="assets/logos/HAZEL_WHITE.png" alt="" class="ticker-logo">
+            <img src="assets/logos/AMERA_WHITE.png" alt="" class="ticker-logo">
+            <img src="assets/logos/SPEAKEASY_WHITE.png" alt="" class="ticker-logo">
+            <img src="assets/logos/PORTABLE_WHITE.png" alt="" class="ticker-logo">
+          </div>
+        </div>
+        <div class="crt-overlay" data-crt data-crt-active="false"></div>
+      </div>
+      <img class="tv-bezel" src="assets/images/tv-frame.png" alt="" data-tv-bezel>
+      <!-- Navigation hitboxes -->
+      <button class="hitbox hitbox-up" data-hitbox="up" aria-label="Previous channel"></button>
+      <button class="hitbox hitbox-down" data-hitbox="down" aria-label="Next channel"></button>
+    </div>
+    <div class="mobile-links" data-mobile-links aria-hidden="true"></div>
+  </div>
+  <script src="js/main.js" type="module" defer></script>
+</body>
+</html>
