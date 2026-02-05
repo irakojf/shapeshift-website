@@ -517,27 +517,30 @@ function buildChannels() {
       video.playsInline = true;
       video.setAttribute('playsinline', '');
       video.setAttribute('webkit-playsinline', '');
+      video.setAttribute('muted', '');
       if (item.poster) {
         video.poster = item.poster;
       }
       if (index === 0) {
+        // First video: use src directly for better iOS poster support
         video.autoplay = true;
         video.setAttribute('autoplay', '');
         video.preload = 'auto';
+        video.src = item.src;
       } else {
         video.preload = 'metadata';
+        // Other videos: use source elements for format flexibility
+        if (item.srcWebm) {
+          const sourceWebm = document.createElement('source');
+          sourceWebm.src = item.srcWebm;
+          sourceWebm.type = 'video/webm';
+          video.appendChild(sourceWebm);
+        }
+        const sourceMp4 = document.createElement('source');
+        sourceMp4.src = item.src;
+        sourceMp4.type = 'video/mp4';
+        video.appendChild(sourceMp4);
       }
-      // Use <source> elements so the browser picks the best format
-      if (item.srcWebm) {
-        const sourceWebm = document.createElement('source');
-        sourceWebm.src = item.srcWebm;
-        sourceWebm.type = 'video/webm';
-        video.appendChild(sourceWebm);
-      }
-      const sourceMp4 = document.createElement('source');
-      sourceMp4.src = item.src;
-      sourceMp4.type = 'video/mp4';
-      video.appendChild(sourceMp4);
       channel.appendChild(video);
     } else if (item.type === 'image') {
       channel.dataset.bio = item.filename;
@@ -621,27 +624,49 @@ function init() {
     });
   });
 
-  // Start first video
+  // Start first video with iOS-friendly approach
   const firstChannel = channels[0];
   const firstVideo = firstChannel?.querySelector('video');
   if (firstVideo && !firstChannel?.dataset.assetError) {
-    const playPromise = firstVideo.play();
-    if (playPromise !== undefined) {
-      playPromise.catch(() => {
-        // Autoplay blocked - add touch listener to start on first interaction
-        const startOnTouch = () => {
-          const activeChannel = channels[state.activeIndex];
-          const activeVideo = activeChannel?.querySelector('video');
-          if (activeVideo) {
-            activeVideo.play().catch(() => {});
-          }
-          document.removeEventListener('touchstart', startOnTouch);
-          document.removeEventListener('click', startOnTouch);
-        };
-        document.addEventListener('touchstart', startOnTouch, { once: true });
-        document.addEventListener('click', startOnTouch, { once: true });
-      });
+    // Ensure muted is set (iOS requirement)
+    firstVideo.muted = true;
+
+    const tryPlay = () => {
+      const playPromise = firstVideo.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Autoplay blocked - add touch listener to start on first interaction
+          const startOnTouch = () => {
+            const activeChannel = channels[state.activeIndex];
+            const activeVideo = activeChannel?.querySelector('video');
+            if (activeVideo) {
+              activeVideo.muted = true;
+              activeVideo.play().catch(() => {});
+            }
+          };
+          document.addEventListener('touchstart', startOnTouch, { once: true });
+          document.addEventListener('click', startOnTouch, { once: true });
+        });
+      }
+    };
+
+    // Wait for video to be ready before playing
+    if (firstVideo.readyState >= 2) {
+      tryPlay();
+    } else {
+      firstVideo.addEventListener('loadeddata', tryPlay, { once: true });
     }
+
+    // Also retry on visibility change (iOS pauses videos when tab is hidden)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        const activeChannel = channels[state.activeIndex];
+        const activeVideo = activeChannel?.querySelector('video');
+        if (activeVideo && activeVideo.paused) {
+          activeVideo.play().catch(() => {});
+        }
+      }
+    });
   }
 
   // Initialize video preload optimization
