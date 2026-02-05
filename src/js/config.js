@@ -45,18 +45,18 @@ export const TICKER = {
   bg: "#000000",
   // logo sets
   fullSet: [
-    "PAVE_WHITE.png",
-    "HIGHTOUCH_WHITE.png",
-    "HAZEL_WHITE.png",
-    "AMERA_WHITE.png",
-    "SPEAKEASY_WHITE.png",
-    "PORTABLE_WHITE.png",
+    "PAVE_WHITE.svg",
+    "HIGHTOUCH_WHITE.svg",
+    "HAZEL_WHITE.svg",
+    "AMERA_WHITE.svg",
+    "SPEAKEASY_WHITE.svg",
+    "PORTABLE_WHITE.svg",
   ],
   smallSet: [
-    "PAVE_WHITE.png",
-    "HIGHTOUCH_WHITE.png",
-    "HAZEL_WHITE.png",
-    "PORTABLE_WHITE.png",
+    "PAVE_WHITE.svg",
+    "HIGHTOUCH_WHITE.svg",
+    "HAZEL_WHITE.svg",
+    "PORTABLE_WHITE.svg",
   ], // <380px
 };
 
