@@ -18,9 +18,9 @@ export const PLAYLIST = [
   { type: "video", filename: "podcast.mp4", src: "assets/videos/podcast.mp4" },
   { type: "video", filename: "hazel-pt-2.mp4", src: "assets/videos/hazel-pt-2.mp4" },
   { type: "video", filename: "amera.mp4", src: "assets/videos/amera.mp4" },
-  { type: "image", filename: "hailey-choi.png", src: "assets/bios/hailey-choi.png" },
-  { type: "image", filename: "jamie-mcneill.png", src: "assets/bios/jamie-mcneill.png" },
-  { type: "image", filename: "ira-ko.png", src: "assets/bios/ira-ko.png" },
+  { type: "image", filename: "hailey-choi.jpg", src: "assets/bios/hailey-choi.jpg" },
+  { type: "image", filename: "jamie-mcneill.jpg", src: "assets/bios/jamie-mcneill.jpg" },
+  { type: "image", filename: "ira-ko.jpg", src: "assets/bios/ira-ko.jpg" },
 ];
 
 // Bezel hitboxes (percentages relative to tv-container box).
