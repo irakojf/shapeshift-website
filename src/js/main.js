@@ -333,10 +333,14 @@ function updateVideoPreload() {
     const channelIndex = parseInt(channel.dataset.channel, 10);
     const nextIndex = (state.activeIndex + 1) % state.totalChannels;
 
-    // Only preload current and next video (check if channel is a video type)
+    // Preload current fully, next with metadata only, rest none
     const isVideoChannel = CONFIG.PLAYLIST[channelIndex]?.type === 'video';
-    if (isVideoChannel && (channelIndex === state.activeIndex || channelIndex === nextIndex)) {
+    if (isVideoChannel && channelIndex === state.activeIndex) {
       video.setAttribute('preload', 'auto');
+      const assetName = getAssetName(channelIndex);
+      if (assetName) preloadedAssets.push(assetName);
+    } else if (isVideoChannel && channelIndex === nextIndex) {
+      video.setAttribute('preload', 'metadata');
       const assetName = getAssetName(channelIndex);
       if (assetName) preloadedAssets.push(assetName);
     } else if (isVideoChannel) {
@@ -502,15 +506,28 @@ function buildChannels() {
     if (item.type === 'video') {
       const video = document.createElement('video');
       video.className = 'channel-video';
-      video.src = item.src;
       video.muted = true;
       video.loop = true;
       video.playsInline = true;
       video.setAttribute('playsinline', '');
+      if (item.poster) {
+        video.poster = item.poster;
+      }
       if (index === 0) {
         video.autoplay = true;
         video.setAttribute('autoplay', '');
       }
+      // Use <source> elements so the browser picks the best format
+      if (item.srcWebm) {
+        const sourceWebm = document.createElement('source');
+        sourceWebm.src = item.srcWebm;
+        sourceWebm.type = 'video/webm';
+        video.appendChild(sourceWebm);
+      }
+      const sourceMp4 = document.createElement('source');
+      sourceMp4.src = item.src;
+      sourceMp4.type = 'video/mp4';
+      video.appendChild(sourceMp4);
       channel.appendChild(video);
     } else if (item.type === 'image') {
       channel.dataset.bio = item.filename;
