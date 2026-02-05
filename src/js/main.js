@@ -418,6 +418,12 @@ function goToChannel(index) {
   const newChannel = channels[index];
   const newVideo = newChannel?.querySelector('video');
   if (newVideo && !newChannel?.dataset.assetError) {
+    // If video hasn't loaded yet (preload was "none"), trigger load first
+    const needsLoad = newVideo.readyState === 0;
+    newVideo.setAttribute('preload', 'auto');
+    if (needsLoad) {
+      newVideo.load();
+    }
     if (state.videoTimes[index] !== undefined) {
       newVideo.currentTime = state.videoTimes[index];
     }
