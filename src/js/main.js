@@ -518,9 +518,19 @@ function buildChannels() {
       video.setAttribute('playsinline', '');
       video.setAttribute('webkit-playsinline', '');
       video.setAttribute('muted', '');
+
+      // Set poster as channel background (always visible until video plays)
       if (item.poster) {
         video.poster = item.poster;
+        channel.dataset.poster = item.poster;
+        channel.style.backgroundImage = `url(${item.poster})`;
       }
+
+      // Show video only when actually playing
+      video.addEventListener('playing', () => video.classList.add('playing'));
+      video.addEventListener('pause', () => video.classList.remove('playing'));
+      video.addEventListener('waiting', () => video.classList.remove('playing'));
+
       if (index === 0) {
         // First video: use src directly for better iOS poster support
         video.autoplay = true;
