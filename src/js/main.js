@@ -333,12 +333,13 @@ function updateVideoPreload() {
     const channelIndex = parseInt(channel.dataset.channel, 10);
     const nextIndex = (state.activeIndex + 1) % state.totalChannels;
 
-    // Only preload current and next video (only for video channels 0-3)
-    if (channelIndex <= 3 && (channelIndex === state.activeIndex || channelIndex === nextIndex)) {
+    // Only preload current and next video (check if channel is a video type)
+    const isVideoChannel = CONFIG.PLAYLIST[channelIndex]?.type === 'video';
+    if (isVideoChannel && (channelIndex === state.activeIndex || channelIndex === nextIndex)) {
       video.setAttribute('preload', 'auto');
       const assetName = getAssetName(channelIndex);
       if (assetName) preloadedAssets.push(assetName);
-    } else if (channelIndex <= 3) {
+    } else if (isVideoChannel) {
       video.setAttribute('preload', 'none');
     }
   });
