@@ -485,14 +485,65 @@ function handleKeydown(e) {
 }
 
 /**
+ * Dynamically generate channel elements from CONFIG.PLAYLIST.
+ * This allows playlist changes via config.js without touching HTML.
+ */
+function buildChannels() {
+  if (!tvPlayer) return;
+
+  // Clear any existing channels
+  tvPlayer.innerHTML = '';
+
+  CONFIG.PLAYLIST.forEach((item, index) => {
+    const channel = document.createElement('div');
+    channel.className = index === 0 ? 'channel active' : 'channel';
+    channel.dataset.channel = index;
+
+    if (item.type === 'video') {
+      const video = document.createElement('video');
+      video.className = 'channel-video';
+      video.src = item.src;
+      video.muted = true;
+      video.loop = true;
+      video.playsInline = true;
+      video.setAttribute('playsinline', '');
+      if (index === 0) {
+        video.autoplay = true;
+        video.setAttribute('autoplay', '');
+      }
+      channel.appendChild(video);
+    } else if (item.type === 'image') {
+      channel.dataset.bio = item.filename;
+      const img = document.createElement('img');
+      img.className = 'channel-bio';
+      img.src = item.src;
+      img.alt = item.filename.replace(/\.\w+$/, '').replace(/-/g, ' ');
+      channel.appendChild(img);
+    }
+
+    tvPlayer.appendChild(channel);
+  });
+
+  // Update data attribute with first asset
+  const firstAsset = CONFIG.PLAYLIST[0]?.filename || '';
+  tvPlayer.dataset.activeAsset = firstAsset;
+}
+
+/**
  * Initialize application.
  * Wrapped in try-catch for graceful error handling.
  */
 function init() {
   try {
+    // Get tvPlayer first for channel building
+    tvPlayer = document.querySelector('[data-tv-player]');
+
+    // Build channels dynamically from config
+    buildChannels();
+
     applyMaskFromConfig();
 
-  // Get all channels
+  // Get all channels (now dynamically created)
   channels = Array.from(document.querySelectorAll('[data-channel]'));
   videos = Array.from(document.querySelectorAll('.channel-video'));
   bios = Array.from(document.querySelectorAll('.channel-bio'));

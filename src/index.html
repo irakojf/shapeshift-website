@@ -43,32 +43,8 @@
     <div class="tv-container">
       <div class="tv-screen" data-screen>
         <div class="tv-screen-content" data-screen-content>
-        <div id="tvPlayer" class="tv-player" data-tv-player data-active-index="0" data-active-asset="hazel.mp4">
-          <!-- Channel 0: Hazel video -->
-          <div class="channel active" data-channel="0">
-            <video class="channel-video" src="assets/videos/hazel.mp4" muted loop playsinline autoplay></video>
-          </div>
-          <!-- Channel 1: Podcast video (baggu temporarily removed) -->
-          <div class="channel" data-channel="1">
-            <video class="channel-video" src="assets/videos/podcast.mp4" muted loop playsinline></video>
-          </div>
-          <!-- Channel 2: Amera video -->
-          <div class="channel" data-channel="2">
-            <video class="channel-video" src="assets/videos/amera.mp4" muted loop playsinline></video>
-          </div>
-          <!-- Channel 3: Hailey bio -->
-          <div class="channel" data-channel="3" data-bio="hailey-choi.png">
-            <img class="channel-bio" src="assets/bios/hailey-choi.png" alt="Hailey Choi">
-          </div>
-          <!-- Channel 4: Jamie bio -->
-          <div class="channel" data-channel="4" data-bio="jamie-mcneill.png">
-            <img class="channel-bio" src="assets/bios/jamie-mcneill.png" alt="Jamie McNeill">
-          </div>
-          <!-- Channel 5: Ira bio -->
-          <div class="channel" data-channel="5" data-bio="ira-ko.png">
-            <img class="channel-bio" src="assets/bios/ira-ko.png" alt="Ira Ko">
-          </div>
-          </div>
+        <!-- Channels are dynamically generated from CONFIG.PLAYLIST in main.js -->
+        <div id="tvPlayer" class="tv-player" data-tv-player data-active-index="0"></div>
           <div class="hotspot-layer" data-hotspots aria-hidden="true"></div>
         </div>
         <div class="tv-ticker" data-ticker data-loop-seconds="24" data-logo-set="full">
