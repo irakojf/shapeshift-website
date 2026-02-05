@@ -39,3 +39,7 @@ All visual tuning is in `src/js/config.js`:
 ## Deployment
 
 Hosted on Vercel with root directory set to `src/`. Domain: shapeshift.so
+
+## Git Commits
+
+Do NOT include `Co-Authored-By: Claude` lines in commit messages.
