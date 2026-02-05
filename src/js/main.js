@@ -507,9 +507,14 @@ function buildChannels() {
       video.loop = true;
       video.playsInline = true;
       video.setAttribute('playsinline', '');
+      video.setAttribute('webkit-playsinline', '');
+      // Preload first video fully, metadata for others
       if (index === 0) {
         video.autoplay = true;
         video.setAttribute('autoplay', '');
+        video.preload = 'auto';
+      } else {
+        video.preload = 'metadata';
       }
       channel.appendChild(video);
     } else if (item.type === 'image') {
@@ -598,7 +603,23 @@ function init() {
   const firstChannel = channels[0];
   const firstVideo = firstChannel?.querySelector('video');
   if (firstVideo && !firstChannel?.dataset.assetError) {
-    firstVideo.play().catch(() => {});
+    const playPromise = firstVideo.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {
+        // Autoplay blocked - add touch listener to start on first interaction
+        const startOnTouch = () => {
+          const activeChannel = channels[state.activeIndex];
+          const activeVideo = activeChannel?.querySelector('video');
+          if (activeVideo) {
+            activeVideo.play().catch(() => {});
+          }
+          document.removeEventListener('touchstart', startOnTouch);
+          document.removeEventListener('click', startOnTouch);
+        };
+        document.addEventListener('touchstart', startOnTouch, { once: true });
+        document.addEventListener('click', startOnTouch, { once: true });
+      });
+    }
   }
 
   // Initialize video preload optimization
