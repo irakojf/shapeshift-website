@@ -322,30 +322,16 @@ function buildTicker() {
 }
 
 /**
- * Update video preload strategy for optimal performance
+ * Update video preload strategy — all videos preloaded (total < 1MB)
  */
 function updateVideoPreload() {
   preloadedAssets = [];
-  videos.forEach((video, index) => {
+  videos.forEach((video) => {
     const channel = video.closest('.channel');
     if (!channel) return;
-
     const channelIndex = parseInt(channel.dataset.channel, 10);
-    const nextIndex = (state.activeIndex + 1) % state.totalChannels;
-
-    // Preload current fully, next with metadata only, rest none
-    const isVideoChannel = CONFIG.PLAYLIST[channelIndex]?.type === 'video';
-    if (isVideoChannel && channelIndex === state.activeIndex) {
-      video.setAttribute('preload', 'auto');
-      const assetName = getAssetName(channelIndex);
-      if (assetName) preloadedAssets.push(assetName);
-    } else if (isVideoChannel && channelIndex === nextIndex) {
-      video.setAttribute('preload', 'metadata');
-      const assetName = getAssetName(channelIndex);
-      if (assetName) preloadedAssets.push(assetName);
-    } else if (isVideoChannel) {
-      video.setAttribute('preload', 'none');
-    }
+    const assetName = getAssetName(channelIndex);
+    if (assetName) preloadedAssets.push(assetName);
   });
 }
 
@@ -418,16 +404,20 @@ function goToChannel(index) {
   const newChannel = channels[index];
   const newVideo = newChannel?.querySelector('video');
   if (newVideo && !newChannel?.dataset.assetError) {
-    // If video hasn't loaded yet (preload was "none"), trigger load first
-    const needsLoad = newVideo.readyState === 0;
-    newVideo.setAttribute('preload', 'auto');
-    if (needsLoad) {
+    const playWhenReady = () => {
+      if (state.videoTimes[index] !== undefined) {
+        newVideo.currentTime = state.videoTimes[index];
+      }
+      newVideo.play().catch(() => {});
+    };
+
+    if (newVideo.readyState >= 2) {
+      playWhenReady();
+    } else {
+      newVideo.setAttribute('preload', 'auto');
       newVideo.load();
+      newVideo.addEventListener('canplay', playWhenReady, { once: true });
     }
-    if (state.videoTimes[index] !== undefined) {
-      newVideo.currentTime = state.videoTimes[index];
-    }
-    newVideo.play().catch(() => {});
   }
 
   state.activeIndex = index;
@@ -526,10 +516,8 @@ function buildChannels() {
         channel.style.backgroundImage = `url(${item.poster})`;
       }
 
-      // Show video only when actually playing
+      // Show video once it starts playing (keep visible during buffering)
       video.addEventListener('playing', () => video.classList.add('playing'));
-      video.addEventListener('pause', () => video.classList.remove('playing'));
-      video.addEventListener('waiting', () => video.classList.remove('playing'));
 
       if (index === 0) {
         // First video: use src directly for better iOS poster support
@@ -538,7 +526,7 @@ function buildChannels() {
         video.preload = 'auto';
         video.src = item.src;
       } else {
-        video.preload = 'metadata';
+        video.preload = 'auto';
         // Other videos: use source elements for format flexibility
         if (item.srcWebm) {
           const sourceWebm = document.createElement('source');
