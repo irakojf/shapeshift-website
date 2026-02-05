@@ -14,10 +14,10 @@ export const MASK = {
 // Fixed playlist order — DO NOT CHANGE.
 // NOTE: baggu.mp4 temporarily removed, podcast moved to index 1
 export const PLAYLIST = [
-  { type: "video", filename: "hazel.mp4", src: "assets/videos/hazel.mp4" },
-  { type: "video", filename: "podcast.mp4", src: "assets/videos/podcast.mp4" },
-  { type: "video", filename: "hazel-pt-2.mp4", src: "assets/videos/hazel-pt-2.mp4" },
-  { type: "video", filename: "amera.mp4", src: "assets/videos/amera.mp4" },
+  { type: "video", filename: "hazel.mp4", src: "assets/videos/hazel.mp4", srcWebm: "assets/videos/hazel.webm", poster: "assets/videos/posters/hazel.jpg" },
+  { type: "video", filename: "podcast.mp4", src: "assets/videos/podcast.mp4", srcWebm: "assets/videos/podcast.webm", poster: "assets/videos/posters/podcast.jpg" },
+  { type: "video", filename: "hazel-pt-2.mp4", src: "assets/videos/hazel-pt-2.mp4", srcWebm: "assets/videos/hazel-pt-2.webm", poster: "assets/videos/posters/hazel-pt-2.jpg" },
+  { type: "video", filename: "amera.mp4", src: "assets/videos/amera.mp4", srcWebm: "assets/videos/amera.webm", poster: "assets/videos/posters/amera.jpg" },
   { type: "image", filename: "hailey-choi.jpg", src: "assets/bios/hailey-choi.jpg" },
   { type: "image", filename: "jamie-mcneill.jpg", src: "assets/bios/jamie-mcneill.jpg" },
   { type: "image", filename: "ira-ko.jpg", src: "assets/bios/ira-ko.jpg" },
@@ -67,7 +67,7 @@ export const HOTSPOTS = {};
 /**
  * Global configuration for geometry + tunables.
  * @type {{
- *   PLAYLIST: Array<{ type: 'video' | 'image', filename: string, src: string }>,
+ *   PLAYLIST: Array<{ type: 'video' | 'image', filename: string, src: string, srcWebm?: string, poster?: string }>,
  *   MASK: { insetTopPct: number, insetRightPct: number, insetBottomPct: number, insetLeftPct: number, radiusPct: number },
  *   HITBOXES: { up: { topPct: number, rightPct: number, widthPct: number, heightPct: number }, down: { topPct: number, rightPct: number, widthPct: number, heightPct: number }, mobileScale: number },
  *   CRT: { durationMs: number },

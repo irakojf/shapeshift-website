@@ -3,7 +3,8 @@
 node_modules/
 .env
 .env.local
-assets/videos/podcast.mp4
+# Original (unoptimized) video backups
+src/assets/videos/originals/
 
 # bv (beads viewer) local config and caches
 .bv/

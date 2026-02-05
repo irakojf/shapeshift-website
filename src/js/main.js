@@ -333,10 +333,14 @@ function updateVideoPreload() {
     const channelIndex = parseInt(channel.dataset.channel, 10);
     const nextIndex = (state.activeIndex + 1) % state.totalChannels;
 
-    // Only preload current and next video (check if channel is a video type)
+    // Preload current fully, next with metadata only, rest none
     const isVideoChannel = CONFIG.PLAYLIST[channelIndex]?.type === 'video';
-    if (isVideoChannel && (channelIndex === state.activeIndex || channelIndex === nextIndex)) {
+    if (isVideoChannel && channelIndex === state.activeIndex) {
       video.setAttribute('preload', 'auto');
+      const assetName = getAssetName(channelIndex);
+      if (assetName) preloadedAssets.push(assetName);
+    } else if (isVideoChannel && channelIndex === nextIndex) {
+      video.setAttribute('preload', 'metadata');
       const assetName = getAssetName(channelIndex);
       if (assetName) preloadedAssets.push(assetName);
     } else if (isVideoChannel) {
@@ -414,6 +418,12 @@ function goToChannel(index) {
   const newChannel = channels[index];
   const newVideo = newChannel?.querySelector('video');
   if (newVideo && !newChannel?.dataset.assetError) {
+    // If video hasn't loaded yet (preload was "none"), trigger load first
+    const needsLoad = newVideo.readyState === 0;
+    newVideo.setAttribute('preload', 'auto');
+    if (needsLoad) {
+      newVideo.load();
+    }
     if (state.videoTimes[index] !== undefined) {
       newVideo.currentTime = state.videoTimes[index];
     }
@@ -502,13 +512,14 @@ function buildChannels() {
     if (item.type === 'video') {
       const video = document.createElement('video');
       video.className = 'channel-video';
-      video.src = item.src;
       video.muted = true;
       video.loop = true;
       video.playsInline = true;
       video.setAttribute('playsinline', '');
       video.setAttribute('webkit-playsinline', '');
-      // Preload first video fully, metadata for others
+      if (item.poster) {
+        video.poster = item.poster;
+      }
       if (index === 0) {
         video.autoplay = true;
         video.setAttribute('autoplay', '');
@@ -516,6 +527,17 @@ function buildChannels() {
       } else {
         video.preload = 'metadata';
       }
+      // Use <source> elements so the browser picks the best format
+      if (item.srcWebm) {
+        const sourceWebm = document.createElement('source');
+        sourceWebm.src = item.srcWebm;
+        sourceWebm.type = 'video/webm';
+        video.appendChild(sourceWebm);
+      }
+      const sourceMp4 = document.createElement('source');
+      sourceMp4.src = item.src;
+      sourceMp4.type = 'video/mp4';
+      video.appendChild(sourceMp4);
       channel.appendChild(video);
     } else if (item.type === 'image') {
       channel.dataset.bio = item.filename;
