@@ -1,258 +1,97 @@
-# Shapeshift TV Website — Agent Rules & Engineering Contract
-
-## Overview
-
-This repository contains the Shapeshift website: a single-page responsive hero experience featuring:
-
-- A CRT TV bezel with a masked “screen”
-- A playlist of videos + static bio images
-- Keyboard + bezel button navigation (UP/DOWN)
-- A subtle CRT channel-change transition
-- A persistent bottom ticker tape logo marquee
-- Clickable hotspots on bio images
-
-This file defines how all agents (Codex, contributors, automation) must work in this codebase.
-
----
-
-## Core Principles
-
-### Spec-First Implementation
-Do not invent UI, copy, or interactions.
-Implement exactly what is described in `SPEC.md`.
-
-### Performance Over Complexity
-Favor lightweight DOM + CSS transforms.
-No unnecessary runtime dependencies.
-
-### Config-Driven Geometry
-All tunable rectangles must live in ONE config file:
-
-- Screen mask inset + radius
-- UP/DOWN hitbox rectangles
-- Hotspot rectangles
-- Ticker parameters
-- Playlist order
-
-Never scatter geometry across components.
-
-### Deterministic Testing Required
-All animations must be controllable in test mode.
-Visual regression must be stable and repeatable.
-
----
-
-## Project Requirements (Must Not Change)
-
-### Visual Baseline
-- Background: `#4425FC`
-- Font: Ubuntu Sans Mono
-- Layout matches provided desktop/mobile screenshots
-- No scrolling
-
----
-
-## Playlist Order (Fixed)
-
-Circular index order:
-
-0. hazel.mp4  
-1. baggu.mp4  
-2. hightouch.mp4  
-3. podcast.mp4  
-4. hailey-choi.png  
-5. jamie-mcneill.png  
-6. ira-ko.png  
-
-Wrap rules:
-
-- Previous from 0 → 6  
-- Next from 6 → 0  
-
----
-
-## Interaction Contract
-
-### Keyboard
-- Left Arrow → previous
-- Right Arrow → next
-
-Must NOT navigate when focus is inside:
-
-- input
-- textarea
-- [contenteditable]
-
----
-
-### Bezel Hitboxes
-
-Two invisible rectangular hit areas:
-
-- UP → previous
-- DOWN → next
-
-Mobile hitboxes may enlarge but must never overlap.
-
-Required DOM hooks:
-
-```html
-[data-hitbox="up"]
-[data-hitbox="down"]
-
-Screen Click Rules
-
-Clicking inside the TV screen (not on hotspots) does nothing.
-
-No click-to-advance behavior.
-
-Video Playback Rules
-
-All videos must:
-
-Autoplay when active
-
-Be muted always
-
-Play inline on mobile
-
-Loop while active
-
-Pause + store playback time when inactive
-
-Resume from stored time when revisited
-
-Preload policy:
-
-Preload only current + next asset
-
-Never preload all assets
-
-CRT Channel Change Effect
-
-On every asset change:
-
-Trigger subtle CRT flicker/glitch
-
-Duration: ~180ms (150–220ms)
-
-Applies to screen-only (content + ticker)
-
-Never affects bezel
-
-Never fades to black
-
-Required hook:
-
-[data-crt-active="true"]
-
-Ticker Tape Marquee
-
-Always visible inside the screen window:
-
-Continuous leftward marquee
-
-Full loop ~24s
-
-Decorative only (not clickable)
-
-Background: #000
-
-Height: 10% of screen, clamped 28–56px
-
-Logo sets:
-
-Full (≥380px):
-
-Pave, Hightouch, Hazel, Amera, Speakeasy, Portable
-
-Small (<380px):
-
-Pave, Hightouch, Hazel, Portable
-
-Required DOM hook:
-
-[data-ticker]
-
-Bio Image Hotspots
-
-Enabled only on:
-
-ira-ko.png
-
-hailey-choi.png
-
-jamie-mcneill.png
-
-Hotspots must:
-
-Be invisible rectangles
-
-Open links in new tab
-
-Use noopener noreferrer
-
-Minimum tap size ~44px mobile
-
-Never overlap
-
-Required hook:
-
-<a data-hotspot-id="...">
-
-Deterministic Test Mode (Required)
-
-Enable via:
-
-?test=1
-
-
-In test mode:
-
-CRT glitch deterministic
-
-Marquee frozen at translateX=0 unless &marquee=run
-
-Internal state exposed:
-
-window.__PLAYER_STATE__ = {
-  activeIndex,
-  activeAsset,
-  preloadedAssets,
-  videoTimes
-};
-
-
-Debug overlay:
-
-?test=1&debug=1
-
-
-Draw outlines for:
-
-Screen mask
-
-Ticker bounds
-
-Hitboxes
-
-Hotspots
-
-Never appears in production.
-
-Definition of Done
-
-A change is complete when:
-
-All Playwright tests pass
-
-Visual snapshots match expected layouts
-
-Test mode + debug overlay work correctly
-
-No geometry overlaps exist
-
-Performance remains smooth on mobile
+# AGENTS.md
+> Guidelines and rules for ALL AI coding agents working in this project.  
+> Read this file **completely and carefully** at the start of EVERY session.  
+> Re-read it immediately after any conversation compaction or reset.  
+> You MUST follow EVERY rule below unless I explicitly override it.
+
+## RULE 0 — THE FUNDAMENTAL OVERRIDE PREROGATIVE
+
+If **I** (the human) tell you to do something — even if it contradicts the rules below — **YOU MUST OBEY ME IMMEDIATELY**.  
+I am in charge. You are not.
+
+## RULE 1 — NO FILE DELETION (EVER — WITHOUT EXPLICIT PERMISSION)
+
+**YOU ARE PERMANENTLY FORBIDDEN FROM DELETING ANY FILE OR DIRECTORY** — even one you created yourself — **unless I give clear, explicit, written permission in the same message**.
+
+- Phrase requests like: “May I delete file X? It is no longer used because Y.”
+- Wait for my unambiguous YES before acting.
+- Document my exact permission text in your response / commit message.
+
+You have a history of catastrophic deletions. This rule is permanent.
+
+## RULE 2 — IRREVERSIBLE / DESTRUCTIVE ACTIONS — DO NOT BREAK GLASS
+
+Never run commands that can cause irreversible data loss or major damage without my explicit, verbatim approval of the **exact command** and acknowledgment of risks.
+
+**Strictly forbidden without my per-command permission:**
+
+- `rm -rf`, `git reset --hard`, `git clean -fdx`, `: > file`, destructive redirects
+- Any bulk delete, overwrite, or force operation
+- Database drops, schema changes, container/image rm/prune without backup
+- Package uninstalls that break dependencies
+
+**Safer alternatives first:** Use `git status`, `git diff`, `git stash`, backups, dry-runs, `--dry-run` flags, temporary copies.
+
+**Even after approval:**
+- Restate the exact command
+- List exactly what will be affected
+- Wait for my final confirmation
+- Log the authorizing message + timestamp
+
+**Permission prompts / approval prompts / confirmation prompts:** In 1-2 sentences, explain the the reasoning why a command needs permission or approval. Name any risks or tradeoffs to be aware of. 
+
+## Git & Workspace Hygiene Rules
+
+These rules exist to reduce commit noise, concurrent-change pauses, and git sandbox friction in multi-agent swarms.
+
+0. General rules: 
+- Default branch is **main** (NEVER reference or use `master`).
+- All work happens on **main** or short-lived feature branches that merge to main.
+- If `master` exists for legacy reasons: keep it synchronized after main pushes (`git push origin main:master`).
+
+1. Before any git add / commit operation:
+   - Always run `git reset` first (unstages everything).
+   - Then explicitly stage **only** the files relevant to the current bead/task.
+   - Verify with `git diff --staged` or `git status --short` that **only** intended files are staged.
+   - Never rely on `git commit -a` or auto-staging — it picks up unrelated changes.
+
+2. Before committing:
+   - Run `git status` and confirm no unexpected pre-staged files or modified files outside your scope.
+   - If unexpected staged/modified files appear → pause, mail the swarm ("Detected pre-staged files not belonging to this bead: [list]"), and ask Human Overseer for direction (keep mixed commit / unstage & separate / revert extras).
+   - Commit message MUST reference the bead ID (e.g., "bd-2gy.19: add accounts_list.json fixture + tests").
+
+3. Sandbox / permission-aware git behavior:
+   - If any git command fails with "Operation not permitted", "index.lock", or permission error inside .git/:
+     - Do NOT retry the command.
+     - Immediately pause the current bead.
+     - Send MCP Agent Mail to Human Overseer: "Git write blocked by sandbox (.git/index.lock or permission denied). Request external fix."
+   - Never attempt to create, modify, or delete files inside .git/ directory.
+   - Human is responsible for git operations that require .git/ writes (checkout, commit, rebase, etc.) when sandbox blocks them.
+
+4. Concurrent change detection & pause:
+   - On detecting concurrent/inconsistent workspace state (untracked files appearing, .beads changes not authored by self, git status shows unexpected diffs):
+     - Pause immediately per concurrent-change rule.
+     - Mail swarm: "Detected concurrent changes: [describe]. Pausing for guidance."
+     - Do NOT proceed with destructive actions (rm, overwrite, commit) without explicit Human approval.
+   - Prefer releasing your own file reservations early if blocked, to avoid blocking others.
+
+5. Beads DB & reset safety:
+   - NEVER run `rm -rf .beads/` without explicit Human approval in the same message.
+   - Before reset: always check `git ls-files .beads/issues.jsonl` and `git log -- .beads/issues.jsonl` to confirm the file is tracked and has history.
+   - After reset sequence (rm -rf .beads/ → git checkout → br init → br sync --import-only):
+     - Immediately run `br doctor` and `bv --robot-priority` (or `bv --robot-next`).
+     - If 0 issues imported → mail Human: "issues.jsonl empty or missing after sync — beads appear lost. Request recovery."
+   - Use ONLY `br` and `bv` commands — legacy `bd` is forbidden.
+
+6. Commit frequency & granularity:
+   - Commit after completing a logical sub-task within a bead (small, frequent commits preferred).
+   - Avoid large, multi-file commits unless the entire change set belongs to one bead.
+   - If a bead spans many files → break it into smaller child beads (e.g., bd-2aq.10, bd-2aq.11).
+
+7. General principle:
+   - Minimize git noise and staging surprises — the goal is clean, auditable history per bead.
+   - When in doubt → pause, mail swarm/Human, and wait for direction rather than risk mixed commits or overwrites.
+   - Human override (RULE 0) always applies — explicit instructions supersede these rules.
 
 ## Landing the Plane (Session Completion)
 
@@ -279,3 +118,208 @@ Performance remains smooth on mobile
 - NEVER stop before pushing - that leaves work stranded locally
 - NEVER say "ready to push when you are" - YOU must push
 - If push fails, resolve and retry until it succeeds
+
+## General Code Editing Discipline
+
+- **Never proliferate files** just to avoid editing existing ones.  
+  No `main_v2.py`, `script_old.sh`, `backup_2026.js`, etc.  
+  Edit in place unless the new file adds genuinely distinct, non-overlapping responsibility.
+
+- **No brittle script-based mass edits** (sed/regex across codebase).  
+  Make changes manually or with parallel sub-agents. For large simple refactors, plan carefully and verify.
+
+- **Backwards compatibility** — we usually do NOT care in early stages.  
+  Prefer the **right** way now over shims/legacy support. Fix directly.
+
+- **Concurent changes** 
+    Before modifying any file outside your current bead, or if you see concurrent changes:
+    1. Send Agent Mail message: "Detected concurrent changes on <files>. Pausing. Waiting for guidance."
+    2. Stop all work and ask human how to proceed.
+
+## Testing — The Safety Net
+
+Tests are **mandatory** for agent autonomy. Comprehensive tests let agents explore, refactor, fix bugs, and polish unsupervised.
+
+**Minimum requirements (adapt to your language/stack):**
+
+- Unit tests for new/changed functions, classes, modules
+- Cover happy path + edge cases (empty/null/max/min/zero/overflow) + error/failure modes
+- Integration / end-to-end tests for core workflows (preferably realistic, minimal mocks)
+- Deterministic when possible (seed random, virtual time, fixed inputs)
+
+**Quality gates before any commit:**
+
+- Run full test suite
+- Lint / format check
+- Type check (if applicable)
+- Fix anything broken
+
+**When in doubt:** Add a test that would have caught the bug you just fixed.
+
+**Prompts to trigger test work:**
+
+- “Do we have full unit test coverage without heavy mocks? What about complete E2E scripts with detailed logging? If not, create beads for this.”
+- After fixes: “Rerun tests and confirm nothing broke.”
+
+## Fresh Eyes & Peer Review Loops
+
+After any meaningful change:
+
+1. **Self-review** — “Read your new/modified code with fresh eyes. Hunt for bugs, inefficiencies, security issues, reliability problems, confusion. Fix anything found. Use ultrathink.”
+2. **Peer review** — “Review code written by fellow agents. Diagnose root causes. Fix if necessary. Cast a wide net.”
+3. Repeat until clean.
+
+## Daily/Continuous Polishing Flywheel
+
+Regularly run variants of:
+
+- “Randomly explore code files. Deeply understand flows. Perform careful fresh-eyes bug hunt. Fix issues while complying with all AGENTS.md rules.”
+- “Scrutinize workflow/implementation for anything suboptimal, wrong, or user-unfriendly. Improve UX intuitiveness, polish, reliability.”
+
+## Toolchain & Agent Workflow Expectations
+
+### Beads and Beads Viewer 
+- This project uses [beads_viewer](https://github.com/Dicklesworthstone/beads_viewer) for issue tracking. Issues are stored in `.beads/` and tracked in git.
+- Use **beads** (`br`, `bv`) for task tracking, dependency graphs, prioritization.
+- Use ONLY br (beads_rust) and bv. Legacy bd is forbidden.
+- On any DB error (not initialized, migrate required, cache rebuild fail, null constraint): 
+  1. rm -rf .beads/
+  2. git checkout HEAD -- .beads/
+  3. br init && br sync --import-only
+  4. Verify with br doctor / bv
+- Never run bd migrate or bd update on broken DB — escalate to human via Agent Mail.
+
+```bash
+# View issues (launches TUI - avoid in automated sessions)
+bv
+
+# CLI commands for agents (use these instead)
+bd ready              # Show issues ready to work (no blockers)
+bd list --status=open # All open issues
+bd show <id>          # Full issue details with dependencies
+bd create --title="..." --type=task --priority=2
+bd update <id> --status=in_progress
+bd close <id> --reason="Completed"
+bd close <id1> <id2>  # Close multiple issues at once
+bd sync               # Commit and push changes
+```
+
+### Workflow Pattern
+
+1. **Start**: Run `bd ready` to find actionable work
+2. **Claim**: Use `bd update <id> --status=in_progress`
+3. **Work**: Implement the task
+4. **Complete**: Use `bd close <id>`
+5. **Sync**: Always run `bd sync` at session end
+
+### Key Concepts
+
+- **Dependencies**: Issues can block other issues. `bd ready` shows only unblocked work.
+- **Priority**: P0=critical, P1=high, P2=medium, P3=low, P4=backlog (use numbers, not words)
+- **Types**: task, bug, feature, epic, question, docs
+- **Blocking**: `bd dep add <issue> <depends-on>` to add dependencies
+
+### Session Protocol
+
+**Before ending any session, run this checklist:**
+
+```bash
+git status              # Check what changed
+git add <files>         # Stage code changes
+bd sync                 # Commit beads changes
+git commit -m "..."     # Commit code
+bd sync                 # Commit any new beads changes
+git push                # Push to remote
+```
+
+### Best Practices
+
+- Check `bd ready` at session start to find available work
+- Update status as you work (in_progress → closed)
+- Create new issues with `bd create` when you discover tasks
+- Use descriptive titles and set appropriate priority/type
+- Always `bd sync` before ending session
+
+<!-- end-bv-agent-instructions -->
+
+- Coordinate via **MCP Agent Mail** — register, introduce yourself, respond promptly, avoid purgatory.
+- Search past sessions/logs with **cass** when needed.
+- Prioritize beads with `bv` (robot flags when appropriate).
+- Commit logically grouped changes with **detailed messages** — never commit junk/ephemeral files.
+
+**Subagents (Claude Code / similar tools only)**  
+- You MAY spawn subagents for narrow, mechanical, formulaic, or highly parallelizable subtasks (e.g., quick bug fixes, targeted explorations, simple refactors, verification loops) when it would save tokens, preserve context, or accelerate progress.  
+- Do NOT feel required to use them — full first-class agents (this instance + swarm via MCP mail) are preferred for most complex or creative work.  
+- If you spawn subagents:  
+  - Keep them focused and short-lived.  
+  - Coordinate results back to the main task clearly.  
+  - Avoid over-delegation that fragments reasoning.  
+- The decision to use subagents is **yours** — use your judgment (ultrathink) on whether it improves efficiency without losing quality or coherence.  
+- Subagents do NOT replace peer review from other full agents via MCP Agent Mail.
+
+**Initialization prompt pattern (use this often):**
+
+"First read ALL of AGENTS.md and README.md super carefully and understand ALL of both!  
+Then use your code investigation mode to fully understand the architecture and purpose.  
+Register with MCP Agent Mail and introduce yourself.  
+Check mail and respond if needed.  
+Use bv to find the most impactful bead(s) you can usefully work on now.  
+Proceed meticulously, mark beads, communicate via mail. Use ultrathink.  
+**If a subtask is clearly mechanical/narrow and would benefit from delegation, feel free to spawn a subagent — but prefer full-agent swarm coordination via MCP mail when possible.** " 
+
+
+**After compaction:**
+
+> Reread AGENTS.md so it is fresh in your mind. 
+
+## Project-Specific Section - Customize Here 
+- Language / primary stack: Vanilla JavaScript (ES modules), HTML5, CSS3 —
+  zero-dependency static site, no build step
+  - Key frameworks/libraries: None. Google Fonts (Ubuntu Sans Mono) is the only external
+   resource. Deployment on Vercel with src/ as root directory. Video optimization via
+  scripts/optimize-videos.sh (ffmpeg).
+  - Test runner & coverage target: Playwright (specified in SPEC.md Phase 8, not yet
+  implemented). Deterministic test mode via ?test=1 (freezes marquee, exposes
+  window.__PLAYER_STATE__). Debug overlay via ?test=1&debug=1. No formal coverage target
+   yet — SPEC requires all visual snapshots match and all routes/interactions pass
+  headless.
+  - Linter/formatter commands: None configured. No ESLint, Prettier, or Stylelint in the
+   repo. No package.json exists.
+  - Core invariants/business rules to always preserve:
+    a. All tunable geometry lives in src/js/config.js only — screen mask insets, hitbox
+  rectangles, hotspot regions, ticker parameters, playlist order. Never scatter geometry
+   across components. (AGENTS.md: "Config-Driven Geometry")
+    b. Implement exactly what SPEC.md describes — do not invent UI, copy, or
+  interactions. No scrolling, background always #4425FC, playlist order is fixed and
+  circular (wraparound 0↔7), videos autoplay muted+looping+inline, time persists
+  per-video across channel switches. (AGENTS.md: "Spec-First Implementation")
+    c. Static-first, no runtime dependencies — no build toolchain, no frameworks, no npm
+   packages. The site must load as plain files served from src/. JS is optional for the
+  upcoming cpapacket compliance pages. (AGENTS.md: "Performance Over Complexity",
+  CLAUDE.md, ADR-2)
+  - Forbidden patterns or legacy gotchas:
+    - Never add React/Next/Vite or any build step
+    - Never include Co-Authored-By: Claude in commit messages (CLAUDE.md)
+    - Never preload all video assets — only current + next (SPEC.md preload policy)
+    - Never make clicking the TV screen advance channels (AGENTS.md: "Screen Click
+  Rules")
+    - Never let CRT glitch fade to black — new content swaps first, glitch overlays on
+  top (SPEC.md)
+    - Never let keyboard nav fire when focus is in input, textarea, or [contenteditable]
+    - HOTSPOTS config is currently {} — bio hotspot rectangles are not yet populated
+  despite the rendering code existing in main.js
+    - Videos went through multiple compression rounds (102MB→11MB→current sizes);
+  src/assets/videos/originals/ is gitignored
+  - Preferred output style (CLI, logging, errors):
+    - Browser console only — no server-side logging
+    - window.__PLAYER_STATE__ = { activeIndex, activeAsset, preloadedAssets, videoTimes
+  } for debugging/testing
+    - try-catch wrapping on init with graceful degradation (missing videos don't crash
+  the page)
+    - data-* DOM hooks throughout for Playwright selectors: [data-screen],
+  [data-ticker], [data-crt], [data-hitbox="up"|"down"], [data-hotspot-id="..."],
+  [data-mobile-links]
+    - Dev server: cd src && python3 -m http.server 8000
+
+**All agents must comply with the above rules religiously.**  
+Failure to do so degrades trust and autonomy — the opposite of our goal.
