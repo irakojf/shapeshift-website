@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>bd-t50.9 hotspot metadata test</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: "Ubuntu Sans Mono", monospace;
+      background: #111;
+      color: #f5f5f5;
+    }
+    h1 {
+      margin: 0 0 12px;
+      font-size: 1.1rem;
+    }
+    #status {
+      margin: 0 0 8px;
+      font-weight: 700;
+    }
+    #results {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 8px;
+    }
+    .pass { color: #65d98b; }
+    .fail { color: #ff7a7a; }
+    iframe {
+      width: 1px;
+      height: 1px;
+      border: 0;
+      position: absolute;
+      left: -9999px;
+    }
+  </style>
+</head>
+<body>
+  <h1>bd-t50.9 hotspot metadata test</h1>
+  <p id="status">Running…</p>
+  <ul id="results"></ul>
+  <iframe id="appFrame" title="Shapeshift app under test"></iframe>
+
+  <script>
+    const statusEl = document.getElementById('status');
+    const resultsEl = document.getElementById('results');
+    const frame = document.getElementById('appFrame');
+    const EXPECTED_BY_CHANNEL = {
+      5: ['instagram', 'portfolio'],
+      6: ['linkedin', 'instagram', 'legendary', 'milkteeth'],
+      7: ['linkedin', 'twitter', 'newsletter', 'producer_founder_spotlights'],
+    };
+
+    const BIO_CHANNELS = [5, 6, 7];
+
+    function report(name, ok, detail = '') {
+      const li = document.createElement('li');
+      li.className = ok ? 'pass' : 'fail';
+      li.textContent = `${ok ? 'PASS' : 'FAIL'}: ${name}${detail ? ` (${detail})` : ''}`;
+      resultsEl.appendChild(li);
+    }
+
+    function wait(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    async function waitFor(predicate, timeoutMs = 3000, pollMs = 25) {
+      const start = Date.now();
+      while (Date.now() - start < timeoutMs) {
+        if (predicate()) return true;
+        await wait(pollMs);
+      }
+      return false;
+    }
+
+    function getDoc() {
+      return frame.contentWindow.document;
+    }
+
+    function getDocState() {
+      const player = getDoc().querySelector('[data-tv-player]');
+      const hotspots = Array.from(getDoc().querySelectorAll('[data-hotspot-id]'));
+      const links = hotspots.map((link) => {
+        const style = frame.contentWindow.getComputedStyle(link);
+        return {
+          id: link.dataset.hotspotId,
+          href: link.href,
+          target: link.getAttribute('target') || '',
+          rel: link.getAttribute('rel') || '',
+          isVisible: style.display !== 'none',
+          ariaHidden: link.getAttribute('aria-hidden')
+        };
+      });
+
+      return {
+        activeIndex: player ? Number(player.dataset.activeIndex) : -1,
+        visibleCount: links.filter((link) => link.isVisible).length,
+        visibleIds: links
+          .filter((link) => link.isVisible)
+          .map((link) => link.id)
+          .sort(),
+        layerAriaHidden: getDoc().querySelector('[data-hotspots]')?.getAttribute('aria-hidden') || 'true',
+        links
+      };
+    }
+
+    function getActiveIndex() {
+      return getDocState().activeIndex;
+    }
+
+    async function goToIndex(targetIndex) {
+      const player = getDoc().querySelector('[data-tv-player]');
+      const total = player ? player.querySelectorAll('[data-channel]').length : 0;
+      const guardLimit = total + 2;
+      let current = getActiveIndex();
+
+      for (let guard = 0; current !== targetIndex && guard < guardLimit; guard += 1) {
+        getDoc().dispatchEvent(new frame.contentWindow.KeyboardEvent('keydown', {
+          key: 'ArrowRight',
+          bubbles: true,
+          cancelable: true
+        }));
+        const ready = await waitFor(() => getActiveIndex() !== current, 1500, 20);
+        if (!ready) break;
+        current = getActiveIndex();
+      }
+
+      return current;
+    }
+
+    async function loadFreshApp() {
+      frame.src = '../index.html?test=1';
+      await new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error('iframe load timeout')), 4000);
+        frame.onload = () => {
+          clearTimeout(timer);
+          resolve();
+        };
+      });
+
+      const ready = await waitFor(() => {
+        const player = getDoc().querySelector('[data-tv-player]');
+        return player && player.querySelectorAll('[data-channel]').length > 0;
+      }, 4000);
+
+      if (!ready) {
+        throw new Error('app did not become ready');
+      }
+
+      await wait(80);
+    }
+
+    async function run() {
+      const results = [];
+
+      await loadFreshApp();
+
+      for (let channelIndex = 0; channelIndex < 5; channelIndex += 1) {
+        const current = channelIndex === 0 ? getActiveIndex() : await goToIndex(channelIndex);
+        const expected = channelIndex === 0 ? 0 : channelIndex;
+        const state = getDocState();
+
+        const okIndex = current === expected;
+        report(`Channel ${channelIndex} is active`, okIndex, `active=${state.activeIndex}, expected=${expected}`);
+        results.push(okIndex);
+
+        if (BIO_CHANNELS.includes(channelIndex)) {
+          continue;
+        }
+
+        const okNoHotspots = state.visibleCount === 0;
+        report(`Non-bio channel ${channelIndex} shows no visible hotspots`, okNoHotspots, `visible=${state.visibleCount}`);
+        results.push(okNoHotspots);
+
+        const okAria = state.layerAriaHidden === 'true';
+        report(`Non-bio channel ${channelIndex} hotspot layer is aria-hidden`, okAria, `aria-hidden=${state.layerAriaHidden}`);
+        results.push(okAria);
+      }
+
+      for (const channelIndex of BIO_CHANNELS) {
+        const current = await goToIndex(channelIndex);
+        const state = getDocState();
+        const expected = EXPECTED_BY_CHANNEL[channelIndex] || [];
+        const expectedSorted = [...expected].sort();
+
+        const okIndex = current === channelIndex;
+        report(`Channel ${channelIndex} is active`, okIndex, `active=${state.activeIndex}, expected=${channelIndex}`);
+        results.push(okIndex);
+
+        const okVisibleCount = state.visibleCount === expected.length;
+        report(`Bio channel ${channelIndex} shows expected hotspot count`, okVisibleCount, `visible=${state.visibleCount}`);
+        results.push(okVisibleCount);
+
+        const okIds = JSON.stringify(state.visibleIds) === JSON.stringify(expectedSorted);
+        report(`Bio channel ${channelIndex} shows expected hotspot ids`, okIds, `visible=${state.visibleIds.join(',')}`);
+        results.push(okIds);
+
+        const okLayer = state.layerAriaHidden === 'false';
+        report(`Bio channel ${channelIndex} hotspot layer is visible`, okLayer, `aria-hidden=${state.layerAriaHidden}`);
+        results.push(okLayer);
+
+        const visibleLinks = state.links.filter((link) => link.isVisible);
+        const okAttrs = visibleLinks.every((link) => {
+          const secureRel = link.rel.includes('noopener') && link.rel.includes('noreferrer');
+          const validHref = /^https?:\/\/.+/i.test(link.href);
+          return expected.includes(link.id) && link.target === '_blank' && secureRel && validHref;
+        });
+        report(`Bio channel ${channelIndex} hotspot links have secure attributes`, okAttrs, `visible ids=${state.visibleIds.join(',')}`);
+        results.push(okAttrs);
+      }
+
+      const passed = results.every(Boolean);
+      statusEl.textContent = passed ? 'All hotspot metadata assertions passed.' : 'One or more assertions failed.';
+      statusEl.className = passed ? 'pass' : 'fail';
+      window.__HOTSPOT_METADATA_TEST_RESULTS__ = {
+        passed,
+        total: results.length,
+        results
+      };
+    }
+
+    run().catch((error) => {
+      statusEl.textContent = `Test harness error: ${error.message}`;
+      statusEl.className = 'fail';
+      report('Harness runtime', false, error.message);
+      window.__HOTSPOT_METADATA_TEST_RESULTS__ = {
+        passed: false,
+        error: error.message
+      };
+    });
+  </script>
+</body>
+</html>

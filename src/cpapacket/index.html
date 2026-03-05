@@ -8,7 +8,7 @@
   <title>CPApacket | Shapeshift</title>
   <meta
     name="description"
-    content="CPApacket is Shapeshift's private internal reporting tool integration for QuickBooks Online."
+    content="cpapacket is Shapeshift's private internal QuickBooks Online integration for CPA-ready internal reporting."
   >
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,58 +26,57 @@
         height="326"
       >
       <p>Shapeshift</p>
-      <h1>CPApacket</h1>
+      <h1>cpapacket</h1>
       <p>Private internal reporting tool for QuickBooks Online.</p>
-      <p>Support: <a href="mailto:support@shapeshift.so">support@shapeshift.so</a></p>
+      <p>Support: <a href="mailto:accounting@shapeshift.so">accounting@shapeshift.so</a></p>
     </header>
 
     <main class="compliance-main">
       <section>
-        <h2>What is CPApacket?</h2>
+        <h2>What is cpapacket?</h2>
         <p>
-          CPApacket is a private internal reporting tool built by Shapeshift for use
-          exclusively within the Shapeshift organization. It connects to QuickBooks Online
-          to generate internal financial reports and summaries for the Shapeshift team.
+          cpapacket is a private internal CLI integration used by Shapeshift to read
+          QuickBooks Online accounting data and generate internal reporting for accounting review and tax preparation.
         </p>
         <p>
-          CPApacket is not a publicly distributed application. It is not available on any
-          marketplace, app store, or for use by third parties.
+          This integration is not a public product and is not distributed to third
+          parties.
         </p>
       </section>
 
       <section>
-        <h2>Data Access and Usage</h2>
-        <p>CPApacket accesses the following QuickBooks Online data for internal reporting purposes:</p>
+        <h2>QuickBooks Data Accessed</h2>
+        <p>cpapacket may access the following QuickBooks Online data:</p>
         <ul>
-          <li>Company financial summary data (profit &amp; loss, balance sheet)</li>
-          <li>Invoice and expense records</li>
-          <li>Account and vendor lists</li>
+          <li>Company information and account lists</li>
+          <li>Transactions (for example invoices, expenses, and journal entries)</li>
+          <li>Standard accounting reports, including Profit &amp; Loss, Balance Sheet, and General Ledger</li>
         </ul>
         <p>
-          All data retrieved from QuickBooks Online is used solely for generating internal
-          reports within the Shapeshift organization. Data is never shared with, sold to,
-          or made accessible to any third party.
+          Data is used only for Shapeshift's internal financial reporting workflows.
+          Data is not sold.
         </p>
       </section>
 
       <section>
-        <h2>Authentication</h2>
+        <h2>How OAuth Connection Works</h2>
         <p>
-          CPApacket uses Intuit's standard OAuth 2.0 authorization flow to connect to
-          QuickBooks Online. Access tokens are stored securely and used only to make
-          authorized API requests on behalf of the connected Shapeshift QuickBooks company.
+          Authorization is initiated from the cpapacket CLI using Intuit OAuth 2.0.
+          The authorized user signs in to QuickBooks Online and approves access, and
+          cpapacket exchanges the authorization code for API credentials.
         </p>
         <p>
-          You can disconnect CPApacket from your QuickBooks Online account at any time.
-          See the <a href="./disconnect/">Disconnect</a> page for instructions.
+          Launch URL and Connect/Reconnect URL:
+          <a href="./connect/">https://apps.shapeshift.so/cpapacket/connect</a>.
+          Access can be revoked any time from QuickBooks Online Connected Apps settings.
         </p>
       </section>
 
       <section>
         <h2>Support</h2>
         <p>
-          For questions, issues, or requests related to CPApacket, contact us at
-          <a href="mailto:support@shapeshift.so">support@shapeshift.so</a>.
+          For questions, issues, or requests related to cpapacket, contact us at
+          <a href="mailto:accounting@shapeshift.so">accounting@shapeshift.so</a>.
         </p>
       </section>
 
@@ -96,7 +95,9 @@
         <a href="./connect/">Connect</a> &middot;
         <a href="./disconnect/">Disconnect</a>
       </nav>
-      <p>Support: <a href="mailto:support@shapeshift.so">support@shapeshift.so</a></p>
+      <p>Support: <a href="mailto:accounting@shapeshift.so">accounting@shapeshift.so</a></p>
+      <p>&copy; Shapeshift</p>
+      <p>cpapacket QuickBooks Online Integration</p>
     </footer>
   </div>
 </body>

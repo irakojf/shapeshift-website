@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>bd-t50.10 hotspot overlap test</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: "Ubuntu Sans Mono", monospace;
+      background: #111;
+      color: #f5f5f5;
+    }
+    h1 {
+      margin: 0 0 12px;
+      font-size: 1.1rem;
+    }
+    #status {
+      margin: 0 0 8px;
+      font-weight: 700;
+    }
+    #results {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 8px;
+    }
+    .pass { color: #65d98b; }
+    .fail { color: #ff7a7a; }
+    iframe {
+      width: 1px;
+      height: 1px;
+      border: 0;
+      position: absolute;
+      left: -9999px;
+    }
+  </style>
+</head>
+<body>
+  <h1>bd-t50.10 hotspot overlap test</h1>
+  <p id="status">Running…</p>
+  <ul id="results"></ul>
+  <iframe id="appFrame" title="Shapeshift app under test"></iframe>
+
+  <script>
+    const statusEl = document.getElementById('status');
+    const resultsEl = document.getElementById('results');
+    const frame = document.getElementById('appFrame');
+    const WARN_LABEL = '[Shapeshift] Hotspot overlap detected';
+    const capturedWarnings = [];
+
+    function report(name, ok, detail = '') {
+      const li = document.createElement('li');
+      li.className = ok ? 'pass' : 'fail';
+      li.textContent = `${ok ? 'PASS' : 'FAIL'}: ${name}${detail ? ` (${detail})` : ''}`;
+      resultsEl.appendChild(li);
+      return ok;
+    }
+
+    function wait(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    async function waitFor(predicate, timeoutMs = 3000, pollMs = 25) {
+      const start = Date.now();
+      while (Date.now() - start < timeoutMs) {
+        if (predicate()) return true;
+        await wait(pollMs);
+      }
+      return false;
+    }
+
+    function getDoc() {
+      return frame.contentWindow.document;
+    }
+
+    async function goToIndex(targetIndex) {
+      const player = getDoc().querySelector('[data-tv-player]');
+      const total = player ? player.querySelectorAll('[data-channel]').length : 0;
+      const guardLimit = total + 2;
+      let current = Number(player?.dataset?.activeIndex || 0);
+
+      for (let guard = 0; current !== targetIndex && guard < guardLimit; guard += 1) {
+        getDoc().dispatchEvent(new frame.contentWindow.KeyboardEvent('keydown', {
+          key: 'ArrowRight',
+          bubbles: true,
+          cancelable: true
+        }));
+        const changed = await waitFor(() => Number(getDoc().querySelector('[data-tv-player]')?.dataset.activeIndex || 0) !== current, 1500, 20);
+        if (!changed) break;
+        current = Number(getDoc().querySelector('[data-tv-player]')?.dataset.activeIndex || 0);
+      }
+
+      return current;
+    }
+
+    async function loadFreshApp() {
+      const previousWarn = frame.contentWindow?.console?.warn;
+
+      const promise = new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error('iframe load timeout')), 5000);
+        frame.onload = () => {
+          clearTimeout(timer);
+          resolve();
+        };
+      });
+      frame.src = '../index.html?test=1';
+      await promise;
+
+      if (frame.contentWindow?.console && previousWarn) {
+        frame.contentWindow.console.warn = (...args) => {
+          const text = String(args[0] || '');
+          if (text.includes(WARN_LABEL)) {
+            capturedWarnings.push(args);
+          }
+          previousWarn(...args);
+        };
+      }
+
+      const ready = await waitFor(() => {
+        const player = getDoc().querySelector('[data-tv-player]');
+        return player && player.querySelectorAll('[data-channel]').length > 0;
+      }, 5000);
+
+      if (!ready) {
+        throw new Error('app did not become ready');
+      }
+
+      await wait(120);
+    }
+
+    async function run() {
+      const resultFlags = [];
+      const app = frame.contentWindow;
+      await loadFreshApp();
+
+      const hasTestTools = app.__HOTSPOT_TEST_TOOLS__ && app.__PLAYER_CONFIG__;
+      resultFlags.push(report('Test helpers are available', Boolean(hasTestTools), 'missing test helper or config export'));
+
+      resultFlags.push(report('No overlap warning on default layout', (app.__PLAYER_STATE__.hotspotWarnings || []).length === 0, `warnings=${(app.__PLAYER_STATE__.hotspotWarnings || []).length}`));
+
+      await goToIndex(5);
+      const haileyHotspots = app.__PLAYER_CONFIG__?.HOTSPOTS?.['hailey-choi.jpg'];
+      const hasBaseHotspots = Array.isArray(haileyHotspots) && haileyHotspots.length >= 2;
+      resultFlags.push(report('Hailey hotspots are readable in test config', hasBaseHotspots, `count=${haileyHotspots ? haileyHotspots.length : 0}`));
+
+      if (!hasBaseHotspots) {
+        throw new Error('Could not read hotspot config for overlap injection');
+      }
+
+      const original = JSON.parse(JSON.stringify(haileyHotspots));
+      app.__PLAYER_CONFIG__.HOTSPOTS['hailey-choi.jpg'] = [
+        {
+          ...original[0],
+          rect: {
+            ...original[0].rect,
+            topPct: 20,
+            heightPct: 70
+          }
+        },
+        {
+          ...original[1],
+          rect: {
+            ...original[1].rect,
+            topPct: 25,
+            heightPct: 70
+          }
+        }
+      ];
+
+      app.__HOTSPOT_TEST_TOOLS__.refreshHotspots();
+      await wait(30);
+      const warningsAfterInjection = app.__PLAYER_STATE__.hotspotWarnings || [];
+      const warnsViaConsole = capturedWarnings.length > 0;
+      const warnPairSeen = warningsAfterInjection.some((item) => item.firstId === 'instagram' && item.secondId === 'portfolio');
+
+      resultFlags.push(report('Overlap warning emitted after forced overlap injection', warningsAfterInjection.length > 0, `warnings=${warningsAfterInjection.length}`));
+      resultFlags.push(report('Overlap warning includes expected pair', warnPairSeen, `pairs=${JSON.stringify(warningsAfterInjection)}`));
+      resultFlags.push(report('Overlap warning emitted through console signal', warnsViaConsole, `consoleWarnings=${capturedWarnings.length}`));
+
+      app.__PLAYER_CONFIG__.HOTSPOTS['hailey-choi.jpg'] = original;
+      app.__HOTSPOT_TEST_TOOLS__.refreshHotspots();
+
+      const passed = resultFlags.every(Boolean);
+      statusEl.textContent = passed ? 'All hotspot overlap assertions passed.' : 'One or more assertions failed.';
+      statusEl.className = passed ? 'pass' : 'fail';
+      window.__HOTSPOT_OVERLAP_TEST_RESULTS__ = {
+        passed,
+        total: resultFlags.length,
+        results: resultFlags
+      };
+    }
+
+    run().catch((error) => {
+      statusEl.textContent = `Test harness error: ${error.message}`;
+      statusEl.className = 'fail';
+      report('Harness runtime', false, error.message);
+      window.__HOTSPOT_OVERLAP_TEST_RESULTS__ = {
+        passed: false,
+        error: error.message
+      };
+    });
+  </script>
+</body>
+</html>

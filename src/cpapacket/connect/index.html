@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <link rel="canonical" href="https://apps.shapeshift.so/cpapacket/connect">
-  <title>Connect | CPApacket | Shapeshift</title>
-  <meta name="description" content="Connect your QuickBooks Online account to CPApacket by Shapeshift.">
+  <title>Connect | cpapacket | Shapeshift</title>
+  <meta name="description" content="Connect and reconnect cpapacket to QuickBooks Online via OAuth 2.0.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Sans+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -16,46 +16,50 @@
   <div class="compliance-shell">
     <header class="compliance-header">
       <p>Shapeshift</p>
-      <h1>CPApacket</h1>
+      <h1>cpapacket</h1>
       <p>Private internal reporting tool for QuickBooks Online.</p>
       <p>Support: <a href="mailto:accounting@shapeshift.so">accounting@shapeshift.so</a></p>
     </header>
 
     <main class="compliance-main">
-      <h2>Connect Your QuickBooks Online Account</h2>
+      <h2>Connect/Reconnect QuickBooks Online</h2>
 
       <section>
         <p>
-          CPApacket is Shapeshift's private internal reporting tool that integrates with
-          QuickBooks Online. This page describes how to connect your QuickBooks Online
-          company to CPApacket.
+          cpapacket is a private internal reporting tool used by Shapeshift to generate internal financial reporting from QuickBooks Online data. This page
+          describes the Connect/Reconnect flow for the QuickBooks Online integration.
+        </p>
+        <p>
+          Connect/Reconnect URL:
+          <a href="https://apps.shapeshift.so/cpapacket/connect">https://apps.shapeshift.so/cpapacket/connect</a>
         </p>
       </section>
 
       <section>
-        <h3>How to Connect</h3>
+        <h3>How OAuth Connect/Reconnect Works</h3>
         <ol>
-          <li>Log in to your QuickBooks Online account.</li>
-          <li>Navigate to <strong>Apps</strong> &rarr; <strong>My Apps</strong> and locate CPApacket.</li>
-          <li>Click <strong>Connect</strong> and authorize the requested permissions.</li>
-          <li>Once authorized, CPApacket will securely access your financial data for internal reporting.</li>
+          <li>Authorization is initiated from the cpapacket CLI.</li>
+          <li>cpapacket starts an OAuth 2.0 flow and opens an Intuit authorization URL.</li>
+          <li>The authorized user signs in to QuickBooks Online and approves access.</li>
+          <li>cpapacket exchanges the OAuth authorization code for access credentials.</li>
+          <li>Reconnect uses the same URL and flow shown on this page.</li>
         </ol>
       </section>
 
       <section>
-        <h3>Reconnecting</h3>
+        <h3>QuickBooks Data Accessed</h3>
         <p>
-          If your connection is interrupted or your token expires, return to this page and
-          repeat the steps above. The reconnect process uses the same URL and flow.
+          The integration reads accounting data required for internal financial reporting,
+          including company information, chart of accounts, transactions, and standard
+          accounting reports (such as Profit &amp; Loss, Balance Sheet, and General Ledger).
         </p>
       </section>
 
       <section>
-        <h3>What Data Is Accessed</h3>
+        <h3>Purpose</h3>
         <p>
-          CPApacket accesses only the financial data necessary for internal reporting,
-          including accounts, transactions, and company information. No data is shared
-          with third parties. See our
+          Data is used only to generate internal CPA reporting packets for accounting
+          review and tax preparation. Data is not sold. For privacy details, see our
           <a href="../privacy/">Privacy Policy</a> for full details.
         </p>
       </section>
@@ -78,6 +82,8 @@
         <a href="../disconnect/">Disconnect</a>
       </nav>
       <p>Support: <a href="mailto:accounting@shapeshift.so">accounting@shapeshift.so</a></p>
+      <p>&copy; Shapeshift</p>
+      <p>cpapacket QuickBooks Online Integration</p>
     </footer>
   </div>
 </body>
