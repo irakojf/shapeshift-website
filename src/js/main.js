@@ -39,6 +39,9 @@ let crtTimeout = null;
 let preloadedAssets = [];
 let hitboxUpEl = null;
 let hitboxDownEl = null;
+let navigationEpoch = 0;
+const pendingCanPlayHandlers = new Map();
+const testTimer = isTestMode ? createDeterministicTimer() : null;
 
 const HOTSPOT_MIN_TAP = 44;
 const MOBILE_MAX_WIDTH = 768;
@@ -54,6 +57,111 @@ const HOTSPOT_LABELS = {
 };
 
 const hotspotItems = [];
+const hotspotLayoutWarnings = [];
+
+const clearTimeoutCompat = (timerId) => {
+  if (!timerId) return;
+  if (testTimer) {
+    testTimer.clearTimeout(timerId);
+    return;
+  }
+  window.clearTimeout(timerId);
+};
+
+const setTimeoutCompat = (callback, delayMs) => {
+  if (testTimer) {
+    return testTimer.setTimeout(callback, delayMs);
+  }
+  return window.setTimeout(callback, delayMs);
+};
+
+const testTimingAPI = testTimer
+  ? {
+      advanceTime: (ms) => testTimer.advanceTime(ms),
+      flush: () => testTimer.flush(),
+      clear: () => {
+        while (testTimer.getState().pendingCount > 0) {
+          const next = testTimer.getState().pendingTimers[0];
+          if (!next) break;
+          testTimer.clearTimeout(next.id);
+        }
+      },
+      state: () => testTimer.getState()
+    }
+  : null;
+
+function createDeterministicTimer() {
+  let currentTime = 0;
+  let nextTimerId = 1;
+  const queue = [];
+
+  const normalizeDelay = (delay) => {
+    const parsed = Number(delay);
+    if (!Number.isFinite(parsed) || parsed <= 0) return 0;
+    return Math.floor(parsed);
+  };
+
+  const sortQueue = () => {
+    queue.sort((a, b) => (a.due - b.due) || (a.id - b.id));
+  };
+
+  return {
+    setTimeout: (callback, delay = 0) => {
+      const id = nextTimerId;
+      nextTimerId += 1;
+      queue.push({
+        id,
+        callback,
+        due: currentTime + normalizeDelay(delay),
+      });
+      sortQueue();
+      return id;
+    },
+    clearTimeout: (id) => {
+      const idx = queue.findIndex((timer) => timer.id === id);
+      if (idx === -1) return false;
+      queue.splice(idx, 1);
+      return true;
+    },
+    advanceTime: (deltaMs = 0) => {
+      const target = currentTime + Math.max(0, Math.floor(deltaMs));
+      while (queue.length > 0) {
+        sortQueue();
+        const next = queue[0];
+        if (!next || next.due > target) break;
+        currentTime = next.due;
+        queue.shift();
+        try {
+          next.callback();
+        } catch (error) {
+          console.error('[Shapeshift] Deterministic timer callback failed:', error);
+        }
+      }
+      currentTime = target;
+    },
+    flush: () => {
+      while (queue.length > 0) {
+        sortQueue();
+        const next = queue.shift();
+        if (!next) break;
+        currentTime = next.due;
+        try {
+          next.callback();
+        } catch (error) {
+          console.error('[Shapeshift] Deterministic timer callback failed:', error);
+        }
+      }
+    },
+    getState: () => ({
+      currentTimeMs: currentTime,
+      pendingCount: queue.length,
+      pendingTimers: queue.map((timer) => ({
+        id: timer.id,
+        dueMs: timer.due
+      })),
+    }),
+  };
+}
 
 /**
  * Update window.__PLAYER_STATE__ for testing and debugging
@@ -64,11 +172,27 @@ function updatePlayerState() {
   }
 
   window.__PLAYER_STATE__ = {
+    testMode: isTestMode,
+    debugMode: isDebugMode,
     activeIndex: state.activeIndex,
     activeAsset: getAssetName(state.activeIndex),
     preloadedAssets: [...preloadedAssets],
-    videoTimes: { ...state.videoTimes }
+    videoTimes: { ...state.videoTimes },
+    hotspotWarnings: [...hotspotLayoutWarnings]
   };
+
+  if (isTestMode && testTimer) {
+    window.__PLAYER_STATE__.testTimers = testTimer.getState();
+  }
+}
+
+function syncDebugOverlayState() {
+  if (!document.body) return;
+  if (isDebugMode) {
+    document.body.dataset.debugOverlay = 'true';
+    return;
+  }
+  delete document.body.dataset.debugOverlay;
 }
 
 // Initialize player state
@@ -156,6 +280,36 @@ function getHotspotLabel(id) {
     .join(' ');
 }
 
+function hasRectOverlap(a, b) {
+  return (
+    a.left < b.left + b.width &&
+    a.left + a.width > b.left &&
+    a.top < b.top + b.height &&
+    a.top + a.height > b.top
+  );
+}
+
+function collectHotspotOverlapWarnings(items) {
+  const warnings = [];
+  const activeItems = items.filter((item) => item.layout);
+  for (let i = 0; i < activeItems.length; i += 1) {
+    for (let j = i + 1; j < activeItems.length; j += 1) {
+      const first = activeItems[i];
+      const second = activeItems[j];
+      if (!hasRectOverlap(first.layout, second.layout)) {
+        continue;
+      }
+
+      warnings.push({
+        asset: first.asset,
+        firstId: first.el.dataset.hotspotId,
+        secondId: second.el.dataset.hotspotId
+      });
+    }
+  }
+  return warnings;
+}
+
 function buildHotspots() {
   if (!hotspotLayer) return;
   hotspotLayer.innerHTML = '';
@@ -178,7 +332,8 @@ function buildHotspots() {
 }
 
 function resolveVerticalOverlaps(items, height) {
-  if (items.length < 2) return;
+  const warnings = collectHotspotOverlapWarnings(items);
+  if (items.length < 2) return warnings;
   const sorted = items.slice().sort((a, b) => a.layout.top - b.layout.top);
   for (let i = 1; i < sorted.length; i += 1) {
     const prev = sorted[i - 1].layout;
@@ -208,6 +363,8 @@ function resolveVerticalOverlaps(items, height) {
   sorted.forEach((item) => {
     item.layout.top = Math.min(item.layout.top, Math.max(0, height - item.layout.height));
   });
+
+  return warnings;
 }
 
 function layoutHotspots() {
@@ -242,8 +399,12 @@ function layoutHotspots() {
     perAsset.get(item.asset).push(item);
   });
 
+  hotspotLayoutWarnings.length = 0;
   perAsset.forEach((items) => {
-    resolveVerticalOverlaps(items, height);
+    const overlaps = resolveVerticalOverlaps(items, height);
+    overlaps.forEach((warning) => {
+      hotspotLayoutWarnings.push(warning);
+    });
   });
 
   hotspotItems.forEach((item) => {
@@ -253,6 +414,11 @@ function layoutHotspots() {
     item.el.style.left = `${item.layout.left}px`;
     item.el.style.top = `${item.layout.top}px`;
   });
+
+  if (isTestMode && hotspotLayoutWarnings.length > 0) {
+    console.warn('[Shapeshift] Hotspot overlap detected', hotspotLayoutWarnings);
+  }
+  updatePlayerState();
 }
 
 function updateHotspotVisibility() {
@@ -335,6 +501,13 @@ function updateVideoPreload() {
   });
 }
 
+function clearPendingCanPlayHandlers() {
+  pendingCanPlayHandlers.forEach((handler, videoEl) => {
+    videoEl.removeEventListener('canplay', handler);
+  });
+  pendingCanPlayHandlers.clear();
+}
+
 /**
  * Trigger CRT glitch effect
  */
@@ -343,7 +516,7 @@ function triggerCRTGlitch() {
   const durationMs = CONFIG.CRT?.durationMs || 180;
 
   if (crtTimeout) {
-    window.clearTimeout(crtTimeout);
+    clearTimeoutCompat(crtTimeout);
     crtTimeout = null;
   }
 
@@ -368,7 +541,7 @@ function triggerCRTGlitch() {
     crtOverlay.classList.add('active');
   }
 
-  crtTimeout = window.setTimeout(() => {
+  crtTimeout = setTimeoutCompat(() => {
     if (!crtOverlay) return;
     crtOverlay.dataset.crtActive = 'false';
     crtOverlay.classList.remove('active');
@@ -383,6 +556,9 @@ function triggerCRTGlitch() {
  * @param {number} index
  */
 function goToChannel(index) {
+  const navEpoch = ++navigationEpoch;
+  clearPendingCanPlayHandlers();
+
   // Wrap around
   if (index < 0) index = state.totalChannels - 1;
   if (index >= state.totalChannels) index = 0;
@@ -400,11 +576,15 @@ function goToChannel(index) {
     ch.classList.toggle('active', i === index);
   });
 
+  state.activeIndex = index;
+
   // Resume new video from saved time
   const newChannel = channels[index];
   const newVideo = newChannel?.querySelector('video');
   if (newVideo && !newChannel?.dataset.assetError) {
     const playWhenReady = () => {
+      // Ignore stale async callbacks from prior rapid navigations.
+      if (navEpoch !== navigationEpoch || state.activeIndex !== index) return;
       if (state.videoTimes[index] !== undefined) {
         newVideo.currentTime = state.videoTimes[index];
       }
@@ -414,13 +594,16 @@ function goToChannel(index) {
     if (newVideo.readyState >= 2) {
       playWhenReady();
     } else {
+      const canPlayHandler = () => {
+        pendingCanPlayHandlers.delete(newVideo);
+        playWhenReady();
+      };
+      pendingCanPlayHandlers.set(newVideo, canPlayHandler);
       newVideo.setAttribute('preload', 'auto');
       newVideo.load();
-      newVideo.addEventListener('canplay', playWhenReady, { once: true });
+      newVideo.addEventListener('canplay', canPlayHandler, { once: true });
     }
   }
-
-  state.activeIndex = index;
 
   // Optimize video preload strategy
   updateVideoPreload();
@@ -563,6 +746,29 @@ function buildChannels() {
  */
 function init() {
   try {
+    syncDebugOverlayState();
+    if (isTestMode && testTimingAPI) {
+      window.__TEST_HELPERS__ = {
+        advanceTime: (ms) => testTimingAPI.advanceTime(ms),
+        flush: () => testTimingAPI.flush(),
+        clearAll: () => testTimingAPI.clear(),
+        state: () => testTimingAPI.state()
+      };
+    }
+    if (isTestMode) {
+      window.__PLAYER_CONFIG__ = CONFIG;
+      window.__HOTSPOT_TEST_TOOLS__ = {
+        refreshHotspots: () => {
+          buildHotspots();
+          layoutHotspots();
+          updateHotspotVisibility();
+          updateMobileLinks();
+          return [...hotspotLayoutWarnings];
+        },
+        getHotspotWarnings: () => [...hotspotLayoutWarnings]
+      };
+    }
+
     // Get tvPlayer first for channel building
     tvPlayer = document.querySelector('[data-tv-player]');
 
@@ -699,7 +905,12 @@ function init() {
   } catch (error) {
     console.error('[Shapeshift] Initialization failed:', error);
     // Expose error state for debugging
-    window.__PLAYER_STATE__ = { error: error.message, activeIndex: 0 };
+    window.__PLAYER_STATE__ = {
+      testMode: isTestMode,
+      debugMode: isDebugMode,
+      error: error.message,
+      activeIndex: 0
+    };
   }
 }
 

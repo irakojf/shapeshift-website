@@ -8,3 +8,7 @@ src/assets/videos/originals/
 
 # bv (beads viewer) local config and caches
 .bv/
+
+# Playwright
+test-results/
+playwright-report/

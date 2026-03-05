@@ -61,8 +61,25 @@ export const TICKER = {
 };
 
 // Hotspots — rectangles are defined in % relative to the "content area ABOVE ticker".
-// Coordinates are STARTING approximations; Codex should visually tune.
-export const HOTSPOTS = {};
+// Coordinates are STARTING approximations; visually tune as needed.
+export const HOTSPOTS = {
+  "hailey-choi.jpg": [
+    { id: "instagram", href: "https://instagram.com/jingerhail/", rect: { topPct: 2, leftPct: 48, widthPct: 50, heightPct: 35 } },
+    { id: "portfolio", href: "https://haileychoi.com", rect: { topPct: 76, leftPct: 2, widthPct: 36, heightPct: 22 } },
+  ],
+  "jamie-mcneill.jpg": [
+    { id: "linkedin", href: "https://linkedin.com/in/jamie-mcneill/", rect: { topPct: 2, leftPct: 45, widthPct: 52, heightPct: 28 } },
+    { id: "instagram", href: "https://instagram.com/jmcneill6/", rect: { topPct: 32, leftPct: 45, widthPct: 52, heightPct: 18 } },
+    { id: "legendary", href: "https://legendary.com/", rect: { topPct: 80, leftPct: 3, widthPct: 28, heightPct: 17 } },
+    { id: "milkteeth", href: "https://youtube.com/watch?v=wtecRgmowFk", rect: { topPct: 80, leftPct: 66, widthPct: 28, heightPct: 17 } },
+  ],
+  "ira-ko.jpg": [
+    { id: "linkedin", href: "https://linkedin.com/in/koira/", rect: { topPct: 2, leftPct: 45, widthPct: 52, heightPct: 25 } },
+    { id: "twitter", href: "https://twitter.com/irajfko", rect: { topPct: 30, leftPct: 45, widthPct: 52, heightPct: 18 } },
+    { id: "newsletter", href: "https://rabbitduck.xyz", rect: { topPct: 76, leftPct: 2, widthPct: 33, heightPct: 22 } },
+    { id: "producer_founder_spotlights", href: "https://instagram.com/shapeshift_stories/", rect: { topPct: 76, leftPct: 37, widthPct: 45, heightPct: 22 } },
+  ],
+};
 
 /**
  * Global configuration for geometry + tunables.
