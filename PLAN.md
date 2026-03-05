@@ -157,7 +157,7 @@ Trigger: QuickBooks production API approval requires public-facing compliance pa
 - All URLs required by Intuit for production app submission live and publicly accessible over HTTPS
 - Landing page, Privacy Policy, Terms/EULA, Connect, and Disconnect pages
 - Consistent "private internal reporting tool" framing across all pages
-- Support email (`support@shapeshift.so`) visible on every page
+- Support email (`accounting@shapeshift.so`) visible on every page
 - Reviewer can understand the integration's purpose in under 30 seconds
 
 **Nice-to-have:**
@@ -244,13 +244,13 @@ Intuit production app review will not issue production API credentials without p
   Mitigation: Test deployed URLs directly before submission; use `index.html` per directory
 - **Risk:** Homepage JS/CSS leaks into compliance pages
   Mitigation: Compliance pages are structurally isolated; optional dedicated `compliance.css`
-- **Risk:** Support email `support@shapeshift.so` is unmonitored
+- **Risk:** Support email `accounting@shapeshift.so` is unmonitored
   Mitigation: Confirm alias exists and is monitored before submission
 
 ### Assumptions
 
 - `apps.shapeshift.so` can be provisioned with valid SSL on current hosting
-- `support@shapeshift.so` exists and is monitored
+- `accounting@shapeshift.so` exists and is monitored
 - Existing site assets (logo) can be reused
 - Compliance site does not need backend OAuth handling
 - Path-based static routing works on the hosting platform (Vercel)
@@ -288,6 +288,6 @@ Before submitting to Intuit, verify:
 
 - Refine this section with dueling-model critique
 - Confirm DNS/hosting strategy for `apps.shapeshift.so` on Vercel
-- Confirm `support@shapeshift.so` is a live, monitored alias
+- Confirm `accounting@shapeshift.so` is a live, monitored alias
 - Convert epics to beads
 - Begin Phase 0 (provisioning) in parallel with Phase 1 (foundation)
