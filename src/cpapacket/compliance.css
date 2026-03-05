@@ -1,0 +1,269 @@
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu+Sans+Mono:wght@400;600;700&display=swap');
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  --compliance-bg: #ffffff;
+  --compliance-text: #111111;
+  --compliance-text-secondary: #555555;
+  --compliance-border: #dddddd;
+  --compliance-link: #1736d2;
+  --compliance-link-hover: #0f2490;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Ubuntu Sans Mono", monospace;
+  font-size: 1rem;
+  color: var(--compliance-text);
+  background: var(--compliance-bg);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Shell layout */
+.compliance-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.compliance-header {
+  padding: 1.5rem 1.5rem 1rem;
+  border-bottom: 1px solid var(--compliance-border);
+}
+
+.compliance-header p {
+  margin: 0;
+  color: var(--compliance-text-secondary);
+  font-size: 0.85rem;
+}
+
+.compliance-header h1 {
+  margin: 0.25rem 0 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--compliance-text);
+  letter-spacing: -0.01em;
+}
+
+.compliance-logo {
+  display: block;
+  width: 156px;
+  max-width: 100%;
+  height: auto;
+  margin-bottom: 0.75rem;
+}
+
+/* Footer */
+.compliance-footer {
+  border-top: 1px solid var(--compliance-border);
+  border-bottom: none;
+  margin-top: auto;
+  padding: 1.5rem;
+  font-size: 0.85rem;
+  color: var(--compliance-text-secondary);
+}
+
+.compliance-footer p {
+  margin: 0 0 0.25rem;
+}
+
+/* Main content */
+.compliance-main {
+  width: min(100%, 720px);
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  flex: 1;
+}
+
+/* Typography scale */
+h1, h2, h3, h4 {
+  color: var(--compliance-text);
+  line-height: 1.3;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+h1 { font-size: 1.5rem; }
+h2 { font-size: 1.25rem; }
+h3 { font-size: 1.1rem; }
+h4 { font-size: 1rem; font-weight: 600; }
+
+h1:first-child,
+h2:first-child {
+  margin-top: 0;
+}
+
+p {
+  margin: 0 0 1rem;
+}
+
+/* Lists — legal text readability */
+ul, ol {
+  margin: 0 0 1rem;
+  padding-left: 1.5rem;
+}
+
+li {
+  margin-bottom: 0.35rem;
+}
+
+li > ul,
+li > ol {
+  margin-top: 0.35rem;
+  margin-bottom: 0;
+}
+
+/* Links */
+a {
+  color: var(--compliance-link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+a:hover {
+  color: var(--compliance-link-hover);
+}
+
+a:focus-visible {
+  outline: 2px solid var(--compliance-link);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Navigation */
+.compliance-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.compliance-nav a {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--compliance-border);
+  border-radius: 4px;
+  text-decoration: none;
+  color: var(--compliance-text);
+  font-size: 0.9rem;
+}
+
+.compliance-nav a:hover {
+  border-color: #888;
+  background: #f5f5f5;
+}
+
+.compliance-nav a:focus-visible {
+  outline: 2px solid var(--compliance-link);
+  outline-offset: 2px;
+}
+
+/* Sections */
+section {
+  margin-bottom: 2rem;
+}
+
+section:last-child {
+  margin-bottom: 0;
+}
+
+/* Definition lists */
+dt {
+  font-weight: 600;
+  margin-top: 0.75rem;
+}
+
+dd {
+  margin-left: 0;
+  margin-bottom: 0.5rem;
+}
+
+/* Horizontal rules */
+hr {
+  border: none;
+  border-top: 1px solid var(--compliance-border);
+  margin: 2rem 0;
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+
+th, td {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+th {
+  font-weight: 600;
+  color: #333;
+}
+
+/* Inline code (emails, URLs) */
+code {
+  font-family: "Ubuntu Sans Mono", monospace;
+  font-size: 0.9em;
+  background: #f4f4f4;
+  padding: 0.15em 0.35em;
+  border-radius: 3px;
+}
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+  body {
+    font-size: 0.95rem;
+  }
+
+  .compliance-header {
+    padding: 1rem;
+  }
+
+  .compliance-main {
+    padding: 1.5rem 1rem;
+  }
+
+  .compliance-footer {
+    padding: 1rem;
+  }
+
+  h1 { font-size: 1.35rem; }
+  h2 { font-size: 1.15rem; }
+
+  .compliance-nav {
+    flex-direction: column;
+  }
+
+  .compliance-nav a {
+    text-align: center;
+    padding: 0.65rem 1rem;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  table {
+    font-size: 0.85rem;
+  }
+
+  th, td {
+    padding: 0.4rem 0.5rem;
+  }
+}
