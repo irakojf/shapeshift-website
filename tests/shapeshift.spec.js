@@ -75,7 +75,7 @@ test.describe('Initial State', () => {
 
   test('tagline shows correct text', async ({ page }) => {
     await page.goto(TEST_URL);
-    await expect(page.locator('.tagline')).toHaveText('Videos that drive growth');
+    await expect(page.locator('.tagline')).toHaveText('Stories and software for artists and craftsmen');
   });
 });
 
